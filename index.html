@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>WebSocket Chat</title>
+</head>
+
+<body>
+    <div id="connection-container"></div>
+    <div>
+        <label for="login-input">Enter a number (1-10) to login:</label>
+        <input type="number" id="login-input" min="1" max="10">
+        <button onclick="login()">Login</button>
+    </div>
+    <div id="chat-container"></div>
+    <input type="text" id="user-input" placeholder="Type your message" disabled>
+    <button onclick="sendMessage()" disabled id="sendMessageButton">Send</button>
+    <script type="text/javascript">
+        let socket;
+        const chatContainer = document.getElementById('chat-container');
+        const connectionContainer = document.getElementById('connection-container');
+        let timer;
+
+        function login() {
+            const userId = document.getElementById('login-input').value;
+
+            socket = new WebSocket(`ws://${window.location.host}/ws?userId=${userId}`);
+            socket.onopen = function (event) {
+                console.log('Connected to server', event);
+                connectionContainer.innerHTML += `<div>Connected to server: ${socket.url}</div>`;
+                document.getElementById('user-input').disabled = false;
+                document.getElementById('sendMessageButton').disabled = false;
+            };
+
+            socket.onmessage = function (event) {
+                chatContainer.innerHTML += `<div>Server: ${event.data}</div>`;
+            };
+
+            socket.onclose = function (event) {
+                connectionContainer.innerHTML += `<div>Connection closed.</div>`;
+                clearInterval(timer);
+            };
+        }
+
+        function sendMessage() {
+            const userInput = document.getElementById('user-input').value;
+            chatContainer.innerHTML += `<div>You: ${userInput}</div>`;
+            socket.send(userInput);
+            document.getElementById('user-input').value = '';
+        }
+    </script>
+</body>
+
+</html>
